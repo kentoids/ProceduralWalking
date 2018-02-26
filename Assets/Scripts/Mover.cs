@@ -4,7 +4,11 @@ using UnityEngine;
 
 public class Mover : MonoBehaviour {
 	public GameObject hip, rFoot, lFoot;
-	Vector3 initialPos, rDest, lDest;
+	Vector3 initHipPos, initRpos, initLpos;
+	public Vector3 rHit { get; private set;}
+	public Vector3 lHit { get; private set;}
+	public Vector3 rDest { get; private set;}
+	public Vector3 lDest { get; private set;}
 	public float power = 1;
 	public float distThres = 1.0f;
 	public float anglePower = 1;
@@ -14,35 +18,26 @@ public class Mover : MonoBehaviour {
 	public bool showTarget = true;
 	public bool activateStabilizeRotation = true;
 	// GameObject targetObj;
-	GameObject rTarget, lTarget;
+	
 	public float speed = 1.0f;
 	public float footThres = 0.1f;
 	public float footStroke = 1.0f;
 	public float headOffset = 0.5f;
 	float footDistance;
-	bool rightMoving = true;
+	public bool rightMoving { get; private set;}
 	Vector3 prevDirection = Vector3.forward;
 
 	float startWalk = 0;
 
 	// Use this for initialization
 	void Start () {
-		initialPos = hip.transform.position;
+		rightMoving = true;
+		initHipPos = hip.transform.position;
+		initRpos = rFoot.transform.position;
+		initLpos = lFoot.transform.position;
 		rDest = rFoot.transform.position;
 		lDest = lFoot.transform.position;
 		footDistance = (rFoot.transform.position - lFoot.transform.position).magnitude;
-
-		rTarget = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-		rTarget.transform.localScale = Vector3.one * 0.5f;
-		Destroy(rTarget.GetComponent<SphereCollider>());
-		rTarget.GetComponent<Renderer>().material.color = Color.red;
-
-		lTarget = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-		lTarget.transform.localScale = Vector3.one * 0.5f;
-		Destroy(lTarget.GetComponent<SphereCollider>());
-		lTarget.GetComponent<Renderer>().material.color = Color.blue;
-		// targetObj = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-		// targetObj.transform.localScale = Vector3.one * 1f;
 	}
 	
 	// Update is called once per frame
@@ -51,7 +46,6 @@ public class Mover : MonoBehaviour {
 		moveTo(new Vector3(-Input.GetAxis("Horizontal"), 0, -Input.GetAxis("Vertical")));
 		// stabilizeHead();
 		if (activateStabilizeRotation) stabilizeRotation();
-		debug();
 	}
 
 	void keepHeadAtCenter() {
@@ -59,7 +53,7 @@ public class Mover : MonoBehaviour {
 		footCenter /= 2;
 		footCenter += lFoot.transform.position;
 		Vector3 toTarget = footCenter - hip.transform.position;
-		toTarget.y = initialPos.y + headOffset - hip.transform.position.y;
+		toTarget.y = initHipPos.y + headOffset - hip.transform.position.y;
 		if (toTarget.magnitude > distThres) {
 			toTarget.Normalize();
 			toTarget *= power;
@@ -103,13 +97,46 @@ public class Mover : MonoBehaviour {
 			if (direction.sqrMagnitude != 0) newDestination += direction;
 			
 			if (rightMoving) {
-				rDest = hip.transform.position + newDestination;
-				rDest.y = rFoot.transform.position.y;
-				curDest = rDest;
+				// add function to check next height
+				// if too high, don't update destination
+
+				Vector3 checkGroundFor = hip.transform.position + newDestination;
+				Ray ray = new Ray(checkGroundFor, Vector3.down);
+				RaycastHit hit;
+				if (Physics.Raycast(ray, out hit, 10.0f)) {
+					// update destination if there is ground
+					rDest = hip.transform.position + newDestination;
+					Debug.Log("hit at " + hit.collider.gameObject);
+					Debug.Log("<color=red>hit.y: </color>" + hit.point.y);
+					// rDest.y = hit.point.y + initRpos.y;
+					rDest = new Vector3(rDest.x, hit.point.y + initRpos.y, rDest.z);
+					rHit = hit.point;
+					curDest = rDest;
+				}
+				Debug.DrawRay(ray.origin, ray.direction, Color.red, 3.0f);
+
+				// rDest = hip.transform.position + newDestination;
+				// rDest.y = rFoot.transform.position.y;
+				// curDest = rDest;
 			} else {
-				lDest = hip.transform.position + newDestination;
-				lDest.y = lFoot.transform.position.y;
-				curDest = lDest;
+				Vector3 checkGroundFor = hip.transform.position + newDestination;
+				Ray ray = new Ray(checkGroundFor, Vector3.down);
+				RaycastHit hit;
+				if (Physics.Raycast(ray, out hit, 10.0f)) {
+					// update destination if there is ground
+					lDest = hip.transform.position + newDestination;
+					// lDest.y = hit.point.y + initLpos.y;
+					lDest = new Vector3(lDest.x, hit.point.y + initRpos.y, lDest.z);
+					lHit = hit.point;
+					Debug.Log("hit at " + hit.collider.gameObject);
+					Debug.Log("<color=red>hit.y: </color>" + hit.point.y);
+					curDest = lDest;
+				}
+				Debug.DrawRay(ray.origin, ray.direction, Color.red, 3.0f);
+
+				// lDest = hip.transform.position + newDestination;
+				// lDest.y = lFoot.transform.position.y;
+				// curDest = lDest;
 			}
 			
 		}
@@ -142,7 +169,7 @@ public class Mover : MonoBehaviour {
 		Debug.DrawLine(hip.transform.position, hip.transform.position + new Vector3(prevDirection.x, 0, prevDirection.z) * 10, Color.blue, 0, false);
 		Debug.DrawLine(hip.transform.position, hip.transform.position + new Vector3(normHip.x, 0, normHip.y) * 10, Color.green, 0, false);
 		Debug.DrawLine(hip.transform.position, hip.transform.position + new Vector3(toAngle.x, 0, toAngle.y) * 10, Color.red, 0, false);
-		print("toTargetAngle: " + toTargetAngle);
+		// print("toTargetAngle: " + toTargetAngle);
 		// print("toAngle: " + toAngle);
 
 		if (Mathf.Abs(toTargetAngle) > angleThres) {
@@ -151,7 +178,7 @@ public class Mover : MonoBehaviour {
 		} else {
 			toTargetAngle /= angleDivision;
 		}
-		print("edited toTargetAngle: " + toTargetAngle);
+		// print("edited toTargetAngle: " + toTargetAngle);
 
 		hip.GetComponent<Rigidbody>().AddTorque(Vector3.up * toTargetAngle, ForceMode.VelocityChange);
 	}
@@ -178,19 +205,5 @@ public class Mover : MonoBehaviour {
 		hip.transform.LookAt(hip.transform.forward + toAngle);
 		// hip.GetComponent<Rigidbody>().AddTorque(toAngle, ForceMode.VelocityChange);
 		// GetComponent<Rigidbody>().MoveRotation(Quaternion.Euler(transform.forward + toAngle/100));
-	}
-
-	void debug() {
-		if (showTarget) {
-			rTarget.GetComponent<Renderer>().material.color = Color.white;
-			lTarget.GetComponent<Renderer>().material.color = Color.white;
-			if (rightMoving) rTarget.GetComponent<Renderer>().material.color = Color.red;
-			else lTarget.GetComponent<Renderer>().material.color = Color.blue;
-			rTarget.transform.position = rDest;
-			lTarget.transform.position = lDest;
-		} else {
-			rTarget.SetActive(false);
-			lTarget.SetActive(false);
-		}
 	}
 }

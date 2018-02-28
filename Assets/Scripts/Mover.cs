@@ -17,7 +17,6 @@ public class Mover : MonoBehaviour {
 
 	public bool showTarget = true;
 	public bool activateStabilizeRotation = true;
-	// GameObject targetObj;
 	
 	public float speed = 1.0f;
 	public float footThres = 0.1f;
@@ -106,18 +105,14 @@ public class Mover : MonoBehaviour {
 				if (Physics.Raycast(ray, out hit, 10.0f)) {
 					// update destination if there is ground
 					rDest = hip.transform.position + newDestination;
-					Debug.Log("hit at " + hit.collider.gameObject);
-					Debug.Log("<color=red>hit.y: </color>" + hit.point.y);
 					// rDest.y = hit.point.y + initRpos.y;
 					rDest = new Vector3(rDest.x, hit.point.y + initRpos.y, rDest.z);
 					rHit = hit.point;
+					// Debug.Log("hit at " + hit.collider.gameObject);
+					// Debug.Log("<color=red>hit.y: </color>" + hit.point.y);
 					curDest = rDest;
 				}
 				Debug.DrawRay(ray.origin, ray.direction, Color.red, 3.0f);
-
-				// rDest = hip.transform.position + newDestination;
-				// rDest.y = rFoot.transform.position.y;
-				// curDest = rDest;
 			} else {
 				Vector3 checkGroundFor = hip.transform.position + newDestination;
 				Ray ray = new Ray(checkGroundFor, Vector3.down);
@@ -128,15 +123,11 @@ public class Mover : MonoBehaviour {
 					// lDest.y = hit.point.y + initLpos.y;
 					lDest = new Vector3(lDest.x, hit.point.y + initRpos.y, lDest.z);
 					lHit = hit.point;
-					Debug.Log("hit at " + hit.collider.gameObject);
-					Debug.Log("<color=red>hit.y: </color>" + hit.point.y);
+					// Debug.Log("hit at " + hit.collider.gameObject);
+					// Debug.Log("<color=red>hit.y: </color>" + hit.point.y);
 					curDest = lDest;
 				}
 				Debug.DrawRay(ray.origin, ray.direction, Color.red, 3.0f);
-
-				// lDest = hip.transform.position + newDestination;
-				// lDest.y = lFoot.transform.position.y;
-				// curDest = lDest;
 			}
 			
 		}
@@ -169,8 +160,6 @@ public class Mover : MonoBehaviour {
 		Debug.DrawLine(hip.transform.position, hip.transform.position + new Vector3(prevDirection.x, 0, prevDirection.z) * 10, Color.blue, 0, false);
 		Debug.DrawLine(hip.transform.position, hip.transform.position + new Vector3(normHip.x, 0, normHip.y) * 10, Color.green, 0, false);
 		Debug.DrawLine(hip.transform.position, hip.transform.position + new Vector3(toAngle.x, 0, toAngle.y) * 10, Color.red, 0, false);
-		// print("toTargetAngle: " + toTargetAngle);
-		// print("toAngle: " + toAngle);
 
 		if (Mathf.Abs(toTargetAngle) > angleThres) {
 			if (toTargetAngle > 0) toTargetAngle = anglePower;
@@ -178,32 +167,7 @@ public class Mover : MonoBehaviour {
 		} else {
 			toTargetAngle /= angleDivision;
 		}
-		// print("edited toTargetAngle: " + toTargetAngle);
 
 		hip.GetComponent<Rigidbody>().AddTorque(Vector3.up * toTargetAngle, ForceMode.VelocityChange);
-	}
-
-	void stabilizeRotation_() {
-		Vector3 toAngle = prevDirection - hip.transform.forward;
-		// print("toAngle: " + toAngle.magnitude);
-		// toAngle.Normalize();
-		// toAngle *= anglePower;
-
-		Debug.DrawLine(hip.transform.position, hip.transform.position + prevDirection * 10, Color.blue, 0, false);
-		Debug.DrawLine(hip.transform.position, hip.transform.position + hip.transform.forward * 10, Color.green, 0, false);
-		Debug.DrawLine(hip.transform.position, hip.transform.position + toAngle * 10, Color.red, 0, false);
-
-		if (toAngle.magnitude > angleThres) {
-			toAngle.Normalize();
-			toAngle *= anglePower;
-			// print("OUT: " + toAngle.magnitude);
-		} else {
-			toAngle /= angleDivision;
-			// print("IN: " + toAngle.magnitude);
-		}
-
-		hip.transform.LookAt(hip.transform.forward + toAngle);
-		// hip.GetComponent<Rigidbody>().AddTorque(toAngle, ForceMode.VelocityChange);
-		// GetComponent<Rigidbody>().MoveRotation(Quaternion.Euler(transform.forward + toAngle/100));
 	}
 }

@@ -1,8 +1,10 @@
 # ProceduralWalking
 Procedural Walking Tool for Unity
 
-# TODO
-- ankle up
+# Todo
+- set destination from outside of Mover script
+
+# Future Todo
 - go over obstacle
     - cast few rays from current destination to next destination
     - get highest y and go over that with another extra height 

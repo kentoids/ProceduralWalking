@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class Mover : MonoBehaviour {
+	public GameObject mainTarget;
 	public GameObject hip, rFoot, lFoot;
 	Vector3 initHipPos, initRpos, initLpos;
 	public Vector3 rHit { get; private set;}
@@ -31,9 +32,11 @@ public class Mover : MonoBehaviour {
 	// Use this for initialization
 	void Start () {
 		rightMoving = true;
-		initHipPos = hip.transform.position;
 		initRpos = rFoot.transform.position;
 		initLpos = lFoot.transform.position;
+		initHipPos = hip.transform.position;
+		// have to change initHipPos to represent distance between ankle for climbing slopes
+		// initHipPos.y = initHipPos.y - initRpos.y;
 		rDest = rFoot.transform.position;
 		lDest = lFoot.transform.position;
 		footDistance = (rFoot.transform.position - lFoot.transform.position).magnitude;
@@ -42,7 +45,10 @@ public class Mover : MonoBehaviour {
 	// Update is called once per frame
 	void Update () {
 		keepHeadAtCenter();
-		moveTo(new Vector3(-Input.GetAxis("Horizontal"), 0, -Input.GetAxis("Vertical")));
+		Vector3 toMainTarget = mainTarget.transform.position - hip.transform.position;
+		toMainTarget.y = 0;
+		moveToTarget(toMainTarget);
+		// moveTo(new Vector3(-Input.GetAxis("Horizontal"), 0, -Input.GetAxis("Vertical")));
 		// stabilizeHead();
 		if (activateStabilizeRotation) stabilizeRotation();
 	}
@@ -52,6 +58,7 @@ public class Mover : MonoBehaviour {
 		footCenter /= 2;
 		footCenter += lFoot.transform.position;
 		Vector3 toTarget = footCenter - hip.transform.position;
+		// toTarget.y = initHipPos.y + (rFoot.transform.position.y + lFoot.transform.position.y)/2 + headOffset - hip.transform.position.y;
 		toTarget.y = initHipPos.y + headOffset - hip.transform.position.y;
 		if (toTarget.magnitude > distThres) {
 			toTarget.Normalize();
@@ -88,6 +95,7 @@ public class Mover : MonoBehaviour {
 			if (direction.sqrMagnitude == 0) {
 				newDestination = Vector3.Cross(prevDirection.normalized, Vector3.up);
 			} else {
+				// note: check here if destination goes wrong. getting the cross product of slanted vector may result weird results
 				newDestination = Vector3.Cross(direction.normalized, Vector3.up);
 				prevDirection = direction.normalized;
 			}
@@ -112,7 +120,7 @@ public class Mover : MonoBehaviour {
 					// Debug.Log("<color=red>hit.y: </color>" + hit.point.y);
 					curDest = rDest;
 				}
-				Debug.DrawRay(ray.origin, ray.direction, Color.red, 3.0f);
+				Debug.DrawRay(ray.origin, ray.direction, Color.cyan, 3.0f);
 			} else {
 				Vector3 checkGroundFor = hip.transform.position + newDestination;
 				Ray ray = new Ray(checkGroundFor, Vector3.down);
@@ -127,15 +135,104 @@ public class Mover : MonoBehaviour {
 					// Debug.Log("<color=red>hit.y: </color>" + hit.point.y);
 					curDest = lDest;
 				}
-				Debug.DrawRay(ray.origin, ray.direction, Color.red, 3.0f);
+				Debug.DrawRay(ray.origin, ray.direction, Color.cyan, 3.0f);
 			}
 			
 		}
 
 		// if both foot is in place, return
 		if (direction.sqrMagnitude == 0) {
-			if ((rDest - rFoot.transform.position).magnitude < footThres &&
-				(lDest - lFoot.transform.position).magnitude < footThres) {
+			if ((rDest - rFoot.transform.position).magnitude < footThres * 2 &&
+				(lDest - lFoot.transform.position).magnitude < footThres * 2) {
+					return;
+			}
+		}
+
+		Vector3 newMove;
+		newMove = curDest - curPos;
+		if (newMove.magnitude > 1) newMove.Normalize();
+		newMove *= speed;
+
+		if (rightMoving) {
+			rFoot.GetComponent<Rigidbody>().AddForce(newMove, ForceMode.VelocityChange);
+		} else {
+			lFoot.GetComponent<Rigidbody>().AddForce(newMove, ForceMode.VelocityChange);
+		}
+	}
+
+	void moveToTarget(Vector3 targetPos) {
+		// check if destination is reached, if so update destination
+		Vector3 curDest, curPos;
+		if (rightMoving) {
+			curDest = rDest;
+			curPos = rFoot.transform.position;
+		} else {
+			curDest = lDest;
+			curPos = lFoot.transform.position;
+		}
+		Vector3 orgPos = targetPos;
+
+		// check if movign foot should be changed
+		if ((curDest - curPos).magnitude < footThres) {
+			// right destination reached, update left destination
+			rightMoving = !rightMoving;
+
+			// new destination for moving foot
+			targetPos.Normalize();
+			targetPos *= footStroke;
+			Vector3 newDestination;
+			if (targetPos.sqrMagnitude == 0) {
+				newDestination = Vector3.Cross(prevDirection.normalized, Vector3.up);
+			} else {
+				// note: check here if destination goes wrong. getting the cross product of slanted vector may result weird results
+				newDestination = Vector3.Cross(targetPos.normalized, Vector3.up);
+				prevDirection = targetPos.normalized;
+			}
+			newDestination *= footDistance/2;
+			if (rightMoving) newDestination *= -1;
+			if (targetPos.sqrMagnitude != 0) newDestination += targetPos;
+			
+			if (rightMoving) {
+				// add function to check next height
+				// if too high, don't update destination
+
+				Vector3 checkGroundFor = hip.transform.position + newDestination;
+				Ray ray = new Ray(checkGroundFor, Vector3.down);
+				RaycastHit hit;
+				if (Physics.Raycast(ray, out hit, 10.0f)) {
+					// update destination if there is ground
+					rDest = hip.transform.position + newDestination;
+					// rDest.y = hit.point.y + initRpos.y;
+					rDest = new Vector3(rDest.x, hit.point.y + initRpos.y, rDest.z);
+					rHit = hit.point;
+					// Debug.Log("hit at " + hit.collider.gameObject);
+					// Debug.Log("<color=red>hit.y: </color>" + hit.point.y);
+					curDest = rDest;
+				}
+				Debug.DrawRay(ray.origin, ray.direction, Color.cyan, 3.0f);
+			} else {
+				Vector3 checkGroundFor = hip.transform.position + newDestination;
+				Ray ray = new Ray(checkGroundFor, Vector3.down);
+				RaycastHit hit;
+				if (Physics.Raycast(ray, out hit, 10.0f)) {
+					// update destination if there is ground
+					lDest = hip.transform.position + newDestination;
+					// lDest.y = hit.point.y + initLpos.y;
+					lDest = new Vector3(lDest.x, hit.point.y + initRpos.y, lDest.z);
+					lHit = hit.point;
+					// Debug.Log("hit at " + hit.collider.gameObject);
+					// Debug.Log("<color=red>hit.y: </color>" + hit.point.y);
+					curDest = lDest;
+				}
+				Debug.DrawRay(ray.origin, ray.direction, Color.cyan, 3.0f);
+			}
+			
+		}
+
+		// if both foot is in place, return
+		if (orgPos.magnitude < footThres * 2) {
+			if ((rDest - rFoot.transform.position).magnitude < footThres * 2 &&
+				(lDest - lFoot.transform.position).magnitude < footThres * 2) {
 					return;
 			}
 		}

@@ -19,7 +19,7 @@ public class Mover : MonoBehaviour {
 	public bool showdebug = false;
 	public bool activateStabilizeRotation = true;
 	
-	public float speed = 1.0f;
+	public float speedPerSecond = 1.0f;
 	public float footThres = 0.1f;
 	public float footStroke = 1.0f;
 	public float headOffset = 0.5f;
@@ -70,6 +70,7 @@ public class Mover : MonoBehaviour {
 				toTarget *= power / 2.0f;
 			}
 		}
+		toTarget *= Time.deltaTime;
 		hip.GetComponent<Rigidbody>().AddForce(toTarget, ForceMode.VelocityChange);
 	}
 
@@ -151,7 +152,7 @@ public class Mover : MonoBehaviour {
 		Vector3 newMove;
 		newMove = curDest - curPos;
 		if (newMove.magnitude > 1) newMove.Normalize();
-		newMove *= speed;
+		newMove *= speedPerSecond;
 
 		if (rightMoving) {
 			rFoot.GetComponent<Rigidbody>().AddForce(newMove, ForceMode.VelocityChange);
@@ -241,7 +242,8 @@ public class Mover : MonoBehaviour {
 		Vector3 newMove;
 		newMove = curDest - curPos;
 		if (newMove.magnitude > 1) newMove.Normalize();
-		newMove *= speed;
+		newMove *= speedPerSecond;
+		newMove *= Time.deltaTime;
 
 		if (rightMoving) {
 			rFoot.GetComponent<Rigidbody>().AddForce(newMove, ForceMode.VelocityChange);

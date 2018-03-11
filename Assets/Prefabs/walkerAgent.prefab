@@ -168,7 +168,7 @@ GameObject:
   - component: {fileID: 135922342332713454}
   - component: {fileID: 23677561538020932}
   - component: {fileID: 114330265334990906}
-  m_Layer: 0
+  m_Layer: 2
   m_Name: target
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -676,14 +676,14 @@ MonoBehaviour:
   hip: {fileID: 1779484192480364}
   rFoot: {fileID: 1812636846727792}
   lFoot: {fileID: 1884158726769744}
-  power: 3
+  power: 50
   distThres: 1
   anglePower: 1
   angleThres: 1
   angleDivision: 50
-  showTarget: 1
+  showdebug: 1
   activateStabilizeRotation: 1
-  speed: 1
+  speedPerSecond: 30
   footThres: 0.5
   footStroke: 2
   headOffset: 0.9
@@ -721,9 +721,9 @@ MonoBehaviour:
   anglePower: 1
   angleThres: 0.1
   angleDivision: 50
-  showTarget: 1
+  showdebug: 0
   activateStabilizeRotation: 1
-  speed: 2
+  speedPerSecond: 1
   footThres: 0.5
   footStroke: 2
   headOffset: 0.5
@@ -733,7 +733,7 @@ MonoBehaviour:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1844731317578012}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e02ad9b700c444bc088814a1b890376e, type: 3}
   m_Name: 

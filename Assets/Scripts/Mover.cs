@@ -20,8 +20,10 @@ public class Mover : MonoBehaviour {
 	public bool activateStabilizeRotation = true;
 	
 	public float speedPerSecond = 1.0f;
+	public float speedVariance = 100f;
 	public float footThres = 0.1f;
 	public float footStroke = 1.0f;
+	public float footStrokeVariance = 0.1f;
 	public float headOffset = 0.5f;
 	float footDistance;
 	public bool rightMoving { get; private set;}
@@ -40,6 +42,9 @@ public class Mover : MonoBehaviour {
 		rDest = rFoot.transform.position;
 		lDest = lFoot.transform.position;
 		footDistance = (rFoot.transform.position - lFoot.transform.position).magnitude;
+
+		speedPerSecond += Random.Range(-speedVariance, speedVariance);
+		footStroke += Random.Range(-footStrokeVariance, footStrokeVariance);
 	}
 	
 	// Update is called once per frame
@@ -72,93 +77,6 @@ public class Mover : MonoBehaviour {
 		}
 		toTarget *= Time.deltaTime;
 		hip.GetComponent<Rigidbody>().AddForce(toTarget, ForceMode.VelocityChange);
-	}
-
-	void moveTo(Vector3 direction) {
-		// check if destination is reached, if so update destination
-		Vector3 curDest, curPos;
-		if (rightMoving) {
-			curDest = rDest;
-			curPos = rFoot.transform.position;
-		} else {
-			curDest = lDest;
-			curPos = lFoot.transform.position;
-		}
-
-		if ((curDest - curPos).magnitude < footThres) {
-			// right destination reached, update left destination
-			if (rightMoving) rightMoving = false;
-			else rightMoving = true;
-
-			direction.Normalize();
-			direction *= footStroke;
-			Vector3 newDestination;
-			if (direction.sqrMagnitude == 0) {
-				newDestination = Vector3.Cross(prevDirection.normalized, Vector3.up);
-			} else {
-				// note: check here if destination goes wrong. getting the cross product of slanted vector may result weird results
-				newDestination = Vector3.Cross(direction.normalized, Vector3.up);
-				prevDirection = direction.normalized;
-			}
-			newDestination *= footDistance/2;
-			if (rightMoving) newDestination *= -1;
-			if (direction.sqrMagnitude != 0) newDestination += direction;
-			
-			if (rightMoving) {
-				// add function to check next height
-				// if too high, don't update destination
-
-				Vector3 checkGroundFor = hip.transform.position + newDestination;
-				Ray ray = new Ray(checkGroundFor, Vector3.down);
-				RaycastHit hit;
-				if (Physics.Raycast(ray, out hit, 10.0f)) {
-					// update destination if there is ground
-					rDest = hip.transform.position + newDestination;
-					// rDest.y = hit.point.y + initRpos.y;
-					rDest = new Vector3(rDest.x, hit.point.y + initRpos.y, rDest.z);
-					rHit = hit.point;
-					// Debug.Log("hit at " + hit.collider.gameObject);
-					// Debug.Log("<color=red>hit.y: </color>" + hit.point.y);
-					curDest = rDest;
-				}
-				Debug.DrawRay(ray.origin, ray.direction, Color.cyan, 3.0f);
-			} else {
-				Vector3 checkGroundFor = hip.transform.position + newDestination;
-				Ray ray = new Ray(checkGroundFor, Vector3.down);
-				RaycastHit hit;
-				if (Physics.Raycast(ray, out hit, 10.0f)) {
-					// update destination if there is ground
-					lDest = hip.transform.position + newDestination;
-					// lDest.y = hit.point.y + initLpos.y;
-					lDest = new Vector3(lDest.x, hit.point.y + initRpos.y, lDest.z);
-					lHit = hit.point;
-					// Debug.Log("hit at " + hit.collider.gameObject);
-					// Debug.Log("<color=red>hit.y: </color>" + hit.point.y);
-					curDest = lDest;
-				}
-				Debug.DrawRay(ray.origin, ray.direction, Color.cyan, 3.0f);
-			}
-			
-		}
-
-		// if both foot is in place, return
-		if (direction.sqrMagnitude == 0) {
-			if ((rDest - rFoot.transform.position).magnitude < footThres * 2 &&
-				(lDest - lFoot.transform.position).magnitude < footThres * 2) {
-					return;
-			}
-		}
-
-		Vector3 newMove;
-		newMove = curDest - curPos;
-		if (newMove.magnitude > 1) newMove.Normalize();
-		newMove *= speedPerSecond;
-
-		if (rightMoving) {
-			rFoot.GetComponent<Rigidbody>().AddForce(newMove, ForceMode.VelocityChange);
-		} else {
-			lFoot.GetComponent<Rigidbody>().AddForce(newMove, ForceMode.VelocityChange);
-		}
 	}
 
 	void moveToTarget(Vector3 targetPos) {

@@ -39,12 +39,19 @@ public class LegDestinationDisplay : MonoBehaviour {
 	// Update is called once per frame
 	void Update () {
 		rTarget.GetComponent<Renderer>().material.color = Color.white;
-			lTarget.GetComponent<Renderer>().material.color = Color.white;
-			if (mover.rightMoving) rTarget.GetComponent<Renderer>().material.color = Color.red;
-			else lTarget.GetComponent<Renderer>().material.color = Color.blue;
-			rTarget.transform.position = mover.rDest;
-			lTarget.transform.position = mover.lDest;
-			rGround.transform.position = mover.rHit;
-			lGround.transform.position = mover.lHit;
+		lTarget.GetComponent<Renderer>().material.color = Color.white;
+		rGround.GetComponent<Renderer>().material.color = Color.white;
+		lGround.GetComponent<Renderer>().material.color = Color.white;
+		if (mover.rightMoving) {
+			rTarget.GetComponent<Renderer>().material.color = Color.red;
+			rGround.GetComponent<Renderer>().material.color = Color.red;
+		} else {
+			lTarget.GetComponent<Renderer>().material.color = Color.blue;
+			lGround.GetComponent<Renderer>().material.color = Color.blue;
+		}
+		rTarget.transform.position = mover.rDest;
+		lTarget.transform.position = mover.lDest;
+		rGround.transform.position = mover.rHit;
+		lGround.transform.position = mover.lHit;
 	}
 }

@@ -210,7 +210,7 @@ public class Mover : MonoBehaviour {
 					// Debug.Log("<color=red>hit.y: </color>" + hit.point.y);
 					curDest = rDest;
 				}
-				Debug.DrawRay(ray.origin, ray.direction, Color.cyan, 3.0f);
+				if (showdebug) Debug.DrawRay(ray.origin, ray.direction, Color.red, 3.0f);
 			} else {
 				Vector3 checkGroundFor = hip.transform.position + newDestination;
 				Ray ray = new Ray(checkGroundFor, Vector3.down);
@@ -225,14 +225,14 @@ public class Mover : MonoBehaviour {
 					// Debug.Log("<color=red>hit.y: </color>" + hit.point.y);
 					curDest = lDest;
 				}
-				Debug.DrawRay(ray.origin, ray.direction, Color.cyan, 3.0f);
+				if (showdebug) Debug.DrawRay(ray.origin, ray.direction, Color.red, 3.0f);
 			}
 			// if (showdebug) Debug.Log("curDest: " + curDest);
 			
 		}
 
 		// if both foot is in place, return
-		if (orgPos.magnitude < footThres * 2) {
+		if (orgPos.magnitude < footThres) {
 			if ((rDest - rFoot.transform.position).magnitude < footThres * 2 &&
 				(lDest - lFoot.transform.position).magnitude < footThres * 2) {
 					return;
@@ -246,9 +246,9 @@ public class Mover : MonoBehaviour {
 		newMove *= Time.deltaTime;
 
 		if (rightMoving) {
-			rFoot.GetComponent<Rigidbody>().AddForce(newMove, ForceMode.VelocityChange);
+			rFoot.GetComponent<Rigidbody>().AddForce(newMove, ForceMode.Acceleration);
 		} else {
-			lFoot.GetComponent<Rigidbody>().AddForce(newMove, ForceMode.VelocityChange);
+			lFoot.GetComponent<Rigidbody>().AddForce(newMove, ForceMode.Acceleration);
 		}
 	}
 

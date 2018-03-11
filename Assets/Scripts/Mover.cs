@@ -16,7 +16,7 @@ public class Mover : MonoBehaviour {
 	public float angleThres = 1.0f;
 	public float angleDivision = 50f;
 
-	public bool showTarget = true;
+	public bool showdebug = false;
 	public bool activateStabilizeRotation = true;
 	
 	public float speed = 1.0f;
@@ -226,6 +226,7 @@ public class Mover : MonoBehaviour {
 				}
 				Debug.DrawRay(ray.origin, ray.direction, Color.cyan, 3.0f);
 			}
+			// if (showdebug) Debug.Log("curDest: " + curDest);
 			
 		}
 

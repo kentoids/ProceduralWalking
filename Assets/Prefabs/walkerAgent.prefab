@@ -455,7 +455,7 @@ Transform:
   m_GameObject: {fileID: 1653417637862936}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 3.7, z: 1.24}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 1.5, y: 1.5, z: 1.5}
   m_Children: []
   m_Father: {fileID: 4336429005969336}
   m_RootOrder: 1
@@ -684,8 +684,10 @@ MonoBehaviour:
   showdebug: 0
   activateStabilizeRotation: 1
   speedPerSecond: 2000
+  speedVariance: 100
   footThres: 0.5
   footStroke: 2
+  footStrokeVariance: 0.1
   headOffset: 0.9
 --- !u!114 &114330265334990906
 MonoBehaviour:
@@ -724,8 +726,10 @@ MonoBehaviour:
   showdebug: 0
   activateStabilizeRotation: 1
   speedPerSecond: 1
+  speedVariance: 100
   footThres: 0.5
   footStroke: 2
+  footStrokeVariance: 0.1
   headOffset: 0.5
 --- !u!114 &114593234107367662
 MonoBehaviour:

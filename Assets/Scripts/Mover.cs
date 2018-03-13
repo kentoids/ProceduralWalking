@@ -18,8 +18,9 @@ public class Mover : MonoBehaviour {
 
 	public bool showdebug = false;
 	public bool activateStabilizeRotation = true;
-	
-	public float speedPerSecond = 1.0f;
+	public bool enableVariance = false;
+
+	public float speedPerSecond = 2000f;
 	public float speedVariance = 100f;
 	public float footThres = 0.1f;
 	public float footStroke = 1.0f;
@@ -43,8 +44,10 @@ public class Mover : MonoBehaviour {
 		lDest = lFoot.transform.position;
 		footDistance = (rFoot.transform.position - lFoot.transform.position).magnitude;
 
-		speedPerSecond += Random.Range(-speedVariance, speedVariance);
-		footStroke += Random.Range(-footStrokeVariance, footStrokeVariance);
+		if (enableVariance) {
+			speedPerSecond += Random.Range(-speedVariance, speedVariance);
+			footStroke += Random.Range(-footStrokeVariance, footStrokeVariance);
+		}
 	}
 	
 	// Update is called once per frame
@@ -111,14 +114,16 @@ public class Mover : MonoBehaviour {
 			if (rightMoving) newDestination *= -1;
 			if (targetPos.sqrMagnitude != 0) newDestination += targetPos;
 			
-			if (rightMoving) {
+			Vector3 checkGroundFor = hip.transform.position + newDestination;
+			Ray ray = new Ray(checkGroundFor, Vector3.down);
+			RaycastHit hit;
+			// mask ignoreRaycast and Agent layer
+			int layermask = (1<<2) | (1<<8);
+			layermask = ~layermask;
+			if (Physics.Raycast(ray, out hit, 10.0f, layermask)) {
 				// add function to check next height
 				// if too high, don't update destination
-
-				Vector3 checkGroundFor = hip.transform.position + newDestination;
-				Ray ray = new Ray(checkGroundFor, Vector3.down);
-				RaycastHit hit;
-				if (Physics.Raycast(ray, out hit, 10.0f)) {
+				if (rightMoving) {
 					// update destination if there is ground
 					rDest = hip.transform.position + newDestination;
 					// rDest.y = hit.point.y + initRpos.y;
@@ -127,13 +132,7 @@ public class Mover : MonoBehaviour {
 					// Debug.Log("hit at " + hit.collider.gameObject);
 					// Debug.Log("<color=red>hit.y: </color>" + hit.point.y);
 					curDest = rDest;
-				}
-				if (showdebug) Debug.DrawRay(ray.origin, ray.direction, Color.red, 3.0f);
-			} else {
-				Vector3 checkGroundFor = hip.transform.position + newDestination;
-				Ray ray = new Ray(checkGroundFor, Vector3.down);
-				RaycastHit hit;
-				if (Physics.Raycast(ray, out hit, 10.0f)) {
+				} else {
 					// update destination if there is ground
 					lDest = hip.transform.position + newDestination;
 					// lDest.y = hit.point.y + initLpos.y;
@@ -145,8 +144,6 @@ public class Mover : MonoBehaviour {
 				}
 				if (showdebug) Debug.DrawRay(ray.origin, ray.direction, Color.red, 3.0f);
 			}
-			// if (showdebug) Debug.Log("curDest: " + curDest);
-			
 		}
 
 		// if both foot is in place, return
@@ -175,9 +172,11 @@ public class Mover : MonoBehaviour {
 		Vector2 toAngle = new Vector2(prevDirection.x, prevDirection.z) - normHip;
 		float toTargetAngle = Vector2.SignedAngle(new Vector2(prevDirection.x, prevDirection.z), normHip);
 
-		Debug.DrawLine(hip.transform.position, hip.transform.position + new Vector3(prevDirection.x, 0, prevDirection.z) * 10, Color.blue, 0, false);
-		Debug.DrawLine(hip.transform.position, hip.transform.position + new Vector3(normHip.x, 0, normHip.y) * 10, Color.green, 0, false);
-		Debug.DrawLine(hip.transform.position, hip.transform.position + new Vector3(toAngle.x, 0, toAngle.y) * 10, Color.red, 0, false);
+		if (showdebug) {
+			Debug.DrawLine(hip.transform.position, hip.transform.position + new Vector3(prevDirection.x, 0, prevDirection.z) * 10, Color.blue, 0, false);
+			Debug.DrawLine(hip.transform.position, hip.transform.position + new Vector3(normHip.x, 0, normHip.y) * 10, Color.green, 0, false);
+			Debug.DrawLine(hip.transform.position, hip.transform.position + new Vector3(toAngle.x, 0, toAngle.y) * 10, Color.red, 0, false);
+		}
 
 		if (Mathf.Abs(toTargetAngle) > angleThres) {
 			if (toTargetAngle > 0) toTargetAngle = anglePower;
